@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagementSystem.Repositories.HienNPQ", "OEMEVWarrantyManagementSystem.Repositories.HienNPQ\OEMEVWarrantyManagementSystem.Repositories.HienNPQ.csproj", "{645B154A-2C52-4398-9EBE-FD0C3A526511}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagementSystem.Service.HienNPQ", "OEMEVWarrantyManagementSystem.Service.HienNPQ\OEMEVWarrantyManagementSystem.Service.HienNPQ.csproj", "{7A4424FD-3405-4955-B300-80A8F737CE82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OEMEVWarrantyManagementSystem.WebAPI.HienNPQ", "OEMEVWarrantyManagementSystem.WebAPI.HienNPQ\OEMEVWarrantyManagementSystem.WebAPI.HienNPQ.csproj", "{DA03360F-D721-4E27-993D-D2189EE7F24A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{645B154A-2C52-4398-9EBE-FD0C3A526511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{645B154A-2C52-4398-9EBE-FD0C3A526511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{645B154A-2C52-4398-9EBE-FD0C3A526511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{645B154A-2C52-4398-9EBE-FD0C3A526511}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A4424FD-3405-4955-B300-80A8F737CE82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A4424FD-3405-4955-B300-80A8F737CE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A4424FD-3405-4955-B300-80A8F737CE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A4424FD-3405-4955-B300-80A8F737CE82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA03360F-D721-4E27-993D-D2189EE7F24A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA03360F-D721-4E27-993D-D2189EE7F24A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA03360F-D721-4E27-993D-D2189EE7F24A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA03360F-D721-4E27-993D-D2189EE7F24A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5890D1EA-263B-4299-8467-92BE9DF93FA6}
+	EndGlobalSection
+EndGlobal

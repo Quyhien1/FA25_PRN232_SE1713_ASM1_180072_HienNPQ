@@ -1,0 +1,6 @@
+@OEMEVWarrantyManagementSystem.WebAPI.HienNPQ_HostAddress = http://localhost:5277
+
+GET {{OEMEVWarrantyManagementSystem.WebAPI.HienNPQ_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
