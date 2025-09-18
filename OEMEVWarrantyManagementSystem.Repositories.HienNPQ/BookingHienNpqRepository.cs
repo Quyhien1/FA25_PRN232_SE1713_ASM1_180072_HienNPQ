@@ -25,7 +25,7 @@ namespace OEMEVWarrantyManagementSystem.Repositories.HienNPQ
             var item = await _context.BookingHienNpqs.Include(c => c.SupportInfoHienNpq).FirstOrDefaultAsync(b => b.BookingHienNpqid == BookingHienNpqid);
             return item ?? new BookingHienNpq();
         }
-        public async Task<List<BookingHienNpq>> SearchAsync(string StationName,int BatteryCapacity,string LicensePlate)
+        public async Task<List<BookingHienNpq>> SearchAsync(string StationName,int? BatteryCapacity,string LicensePlate)
         {
             var item = await _context.BookingHienNpqs.Include(c => c.SupportInfoHienNpq)
                 .Where(c =>
@@ -36,7 +36,7 @@ namespace OEMEVWarrantyManagementSystem.Repositories.HienNPQ
                 .ToListAsync();
             return item ?? new List<BookingHienNpq>();
         }
-        public async Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(string StationName, int BatteryCapacity, string LicensePlate,int currentPage, int pageSize)
+        public async Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(string StationName, int? BatteryCapacity, string LicensePlate,int currentPage, int pageSize)
         {
             // Await the search task to get the list, then operate on the list synchronously.
             var items = await this.SearchAsync(StationName, BatteryCapacity, LicensePlate);

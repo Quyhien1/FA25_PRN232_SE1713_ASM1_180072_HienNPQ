@@ -51,7 +51,8 @@ namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
             }
             catch (Exception ex)
             {
-                return new List<BookingHienNpq>();
+                // return new List<BookingHienNpq>();
+                throw new Exception(ex.Message);
             }
         }
 
@@ -67,7 +68,7 @@ namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
             }
         }
 
-        public async Task<List<BookingHienNpq>> SearchAsync(string StationName, int BatteryCapacity, string LicensePlate)
+        public async Task<List<BookingHienNpq>> SearchAsync(string StationName, int? BatteryCapacity, string LicensePlate)
         {
             try
             {
