@@ -80,7 +80,7 @@ namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
             }
         }
 
-        public async Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(SearchRequest.BookingHienNpqSearchRequest SearchRequest)
+        public async Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(SearchRequest.BookingHienNpqSearchRequest? SearchRequest)
         {
             try
             {

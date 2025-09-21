@@ -17,6 +17,6 @@ namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
         Task<int> CreateAsync(BookingHienNpq booking);
         Task<int> UpdateAsync(BookingHienNpq booking);
         Task<List<BookingHienNpq>> SearchAsync(string StationName, int? BatteryCapacity, string LicensePlate);
-        Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(BookingHienNpqSearchRequest SearchRequest);
+        Task<PaginationResult<List<BookingHienNpq>>> SearchWithAsyncPaging(BookingHienNpqSearchRequest? SearchRequest);
     }
 }
