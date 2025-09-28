@@ -10,14 +10,21 @@ using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagementSystem.Repositories.HienNPQ
 {
-    public class SystemUserAccountRepository : GenericRepository<SystemUserAccount>
+    public class SystemUserAccountRepository
     {
-        public SystemUserAccountRepository() { }
-        public SystemUserAccountRepository(FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext context) => _context =context;
-        public async Task<SystemUserAccount> GetUserAccount(string username, string password)
+        private readonly FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext _context;
+
+        public SystemUserAccountRepository(FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext context)
         {
-            return await _context.SystemUserAccounts.FirstOrDefaultAsync(u => u.UserName == username && u.Password == password && u.IsActive == true);
+            _context = context;
         }
 
+        public Task<SystemUserAccount> GetUserAccount(string username, string password)
+        {
+            return _context.SystemUserAccounts
+                .FirstOrDefaultAsync(u => u.UserName == username
+                                          && u.Password == password
+                                          && u.IsActive);
+        }
     }
 }

@@ -1,9 +1,6 @@
 ﻿using OEMEVWarrantyManagementSystem.Repositories.HienNPQ;
 using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
@@ -11,17 +8,19 @@ namespace OEMEVWarrantyManagementSystem.Service.HienNPQ
     public class SystemUserAccountService
     {
         private readonly SystemUserAccountRepository _repository;
-        public SystemUserAccountService() => _repository = new SystemUserAccountRepository();
-        public async Task<SystemUserAccount> GetUserAccount(string username, string password)
+        private readonly ILogger<SystemUserAccountService> _logger;
+
+        public SystemUserAccountService(SystemUserAccountRepository repository,
+                                        ILogger<SystemUserAccountService> logger)
         {
-            try
-            {
-                return await _repository.GetUserAccount(username, password);
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            _repository = repository;
+            _logger = logger;
+        }
+
+        public Task<SystemUserAccount> GetUserAccount(string username, string password)
+        {
+            // (Optional) Add normalization: username = username.Trim();
+            return _repository.GetUserAccount(username, password);
         }
     }
 }

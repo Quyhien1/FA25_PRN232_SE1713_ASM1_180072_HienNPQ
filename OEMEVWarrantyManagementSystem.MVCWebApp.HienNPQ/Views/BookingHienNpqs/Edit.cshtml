@@ -1,0 +1,71 @@
+﻿@model OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models.BookingHienNpq
+
+@{
+    ViewData["Title"] = "Edit Booking";
+}
+
+<h2>Edit Booking</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="BookingHienNpqid" />
+
+    <div class="mb-2">
+        <label asp-for="StationName" class="form-label"></label>
+        <input asp-for="StationName" class="form-control" />
+        <span asp-validation-for="StationName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="VehicleType" class="form-label"></label>
+        <input asp-for="VehicleType" class="form-control" />
+        <span asp-validation-for="VehicleType" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="BatteryCapacity" class="form-label"></label>
+        <input asp-for="BatteryCapacity" class="form-control" />
+        <span asp-validation-for="BatteryCapacity" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="PricePerHour" class="form-label"></label>
+        <input asp-for="PricePerHour" class="form-control" />
+        <span asp-validation-for="PricePerHour" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="StartTime" class="form-label"></label>
+        <input asp-for="StartTime" type="datetime-local" class="form-control" />
+        <span asp-validation-for="StartTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="EndTime" class="form-label"></label>
+        <input asp-for="EndTime" type="datetime-local" class="form-control" />
+        <span asp-validation-for="EndTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2 form-check">
+        <input asp-for="IsPreBooked" class="form-check-input" />
+        <label asp-for="IsPreBooked" class="form-check-label"></label>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="SupportInfoHienNpqid" class="form-label">Support Info (License Plate)</label>
+        <select asp-for="SupportInfoHienNpqid" asp-items="ViewBag.SupportInfos" class="form-select">
+            <option value="">-- none --</option>
+        </select>
+        <span asp-validation-for="SupportInfoHienNpqid" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label asp-for="Status" class="form-label"></label>
+        <input asp-for="Status" class="form-control" />
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
