@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OEMEVWarrantyManagementSystem.Repositories.HienNPQ;
 using OEMEVWarrantyManagementSystem.Service.HienNPQ;
 using System.Text;
 using System.Text.Json.Serialization;
+using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.DBContext;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IBookingHienNpqService, BookingHienNpqService>();
 builder.Services.AddScoped<SystemUserAccountService>();
+builder.Services.AddScoped<SystemUserAccountRepository>();
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -64,6 +68,8 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
+builder.Services.AddDbContext<FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,21 +1,23 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using OEMEVWarrantyManagementSystem.Repositories.HienNPQ;
-using OEMEVWarrantyManagementSystem.Service.HienNPQ;
-using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.DBContext;
 using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.DBContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext (ensure connection string "DefaultConnection" exists)
+// DbContext only if still needed elsewhere (can be removed if MVC no longer directly touches DB)
+// If not required, comment out the following AddDbContext.
 builder.Services.AddDbContext<FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Services
-builder.Services.AddScoped<IBookingHienNpqService, BookingHienNpqService>();
-builder.Services.AddScoped<SystemUserAccountService>(); // if already there keep it
-builder.Services.AddScoped<SystemUserAccountRepository>();
+// HttpClient to call Web API (base address from config or fallback)
+var apiBaseUrl = builder.Configuration.GetValue<string>("ApiBaseUrl") ?? "https://localhost:7062/api/"; // ensure trailing slash
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Accept.Clear();
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
 
-// Auth (keep whatever you already have)
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -25,20 +27,29 @@ builder.Services
         o.ExpireTimeSpan = TimeSpan.FromHours(2);
         o.SlidingExpiration = true;
     });
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}"); // keep your existing default
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

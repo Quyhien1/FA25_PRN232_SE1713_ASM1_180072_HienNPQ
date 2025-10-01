@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OEMEVWarrantyManagementSystem.Repositories.HienNPQ\OEMEVWarrantyManagementSystem.Repositories.HienNPQ.csproj" />
-    <ProjectReference Include="..\OEMEVWarrantyManagementSystem.Service.HienNPQ\OEMEVWarrantyManagementSystem.Service.HienNPQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

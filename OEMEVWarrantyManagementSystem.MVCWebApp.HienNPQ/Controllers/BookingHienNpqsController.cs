@@ -1,129 +1,109 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.DBContext;
 using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
-using OEMEVWarrantyManagementSystem.Service.HienNPQ;
-using System.Threading.Tasks;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace OEMEVWarrantyManagementSystem.MVCWebApp.HienNPQ.Controllers
 {
-    [Authorize] // Adjust roles if needed: [Authorize(Roles="1,2")]
+    [Authorize]
     public class BookingHienNpqsController : Controller
     {
-        private readonly FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext _context;
-        private readonly IBookingHienNpqService _service;
+        private readonly HttpClient _apiClient;
+        private readonly ILogger<BookingHienNpqsController> _logger;
 
-        public BookingHienNpqsController(
-            FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext context,
-            IBookingHienNpqService service)
+        public BookingHienNpqsController(IHttpClientFactory httpClientFactory, ILogger<BookingHienNpqsController> logger)
         {
-            _context = context;
-            _service = service;
+            _apiClient = httpClientFactory.CreateClient("ApiClient");
+            _logger = logger;
         }
 
-        // GET: /BookingHienNpqs
-        public async Task<IActionResult> Index()
+        // Initial page shell (data loaded via AJAX)
+        public IActionResult Index()
         {
-            var list = await _context.BookingHienNpqs
-                .Include(b => b.SupportInfoHienNpq)
-                .AsNoTracking()
-                .ToListAsync();
-            return View(list);
+            return View();
         }
 
-        // GET: /BookingHienNpqs/Details/5
-        public async Task<IActionResult> Details(int id)
+        private bool EnsureToken()
         {
-            var item = await _context.BookingHienNpqs
-                .Include(b => b.SupportInfoHienNpq)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.BookingHienNpqid == id);
-
-            if (item == null) return NotFound();
-            return View(item);
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrWhiteSpace(token)) return false;
+            _apiClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return true;
         }
 
-        // GET: /BookingHienNpqs/Create
-        public async Task<IActionResult> Create()
+        // AJAX endpoint that proxies to Web API using server-stored JWT
+        [HttpGet]
+        public async Task<IActionResult> Data()
         {
-            await LoadSupportInfosAsync();
-            return View(new BookingHienNpq { Status = "Pending", StartTime = DateTime.UtcNow });
-        }
-
-        // POST: /BookingHienNpqs/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(BookingHienNpq model)
-        {
-            if (!ModelState.IsValid)
+            if (!EnsureToken()) return Unauthorized();
+            try
             {
-                await LoadSupportInfosAsync(model.SupportInfoHienNpqid);
-                return View(model);
+                var bookings = await _apiClient.GetFromJsonAsync<List<BookingHienNpq>>("BookingHienNpqs");
+                return Json(new { success = true, data = bookings });
             }
-            await _service.CreateAsync(model);
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: /BookingHienNpqs/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var booking = await _context.BookingHienNpqs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.BookingHienNpqid == id);
-            if (booking == null) return NotFound();
-
-            await LoadSupportInfosAsync(booking.SupportInfoHienNpqid);
-            return View(booking);
-        }
-
-        // POST: /BookingHienNpqs/Edit
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(BookingHienNpq model)
-        {
-                if (!ModelState.IsValid)
+            catch (Exception ex)
             {
-                await LoadSupportInfosAsync(model.SupportInfoHienNpqid);
-                return View(model);
+                _logger.LogError(ex, "Error fetching bookings via API");
+                return Json(new { success = false, error = "Failed to load data" });
             }
-
-            // Since global NoTracking is enabled, just update the detached model
-            _context.Update(model);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
         }
 
-        // GET: /BookingHienNpqs/Delete/5
-        public async Task<IActionResult> Delete(int id)
+        [HttpGet]
+        public async Task<IActionResult> Get(int id)
         {
-            var item = await _context.BookingHienNpqs
-                .Include(b => b.SupportInfoHienNpq)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.BookingHienNpqid == id);
-            if (item == null) return NotFound();
-            return View(item);
+            if (!EnsureToken()) return Unauthorized();
+            try
+            {
+                var booking = await _apiClient.GetFromJsonAsync<BookingHienNpq>($"BookingHienNpqs/{id}");
+                if (booking == null) return NotFound();
+                return Json(new { success = true, data = booking });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching booking {Id}", id);
+                return Json(new { success = false, error = "Failed to load booking" });
+            }
         }
 
-        // POST: /BookingHienNpqs/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] BookingHienNpq model)
         {
-            await _service.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            if (!EnsureToken()) return Unauthorized();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            try
+            {
+                var resp = await _apiClient.PostAsJsonAsync("BookingHienNpqs", model);
+                if (!resp.IsSuccessStatusCode)
+                    return Json(new { success = false, error = "API create failed" });
+                var newId = await resp.Content.ReadFromJsonAsync<int>();
+                return Json(new { success = true, id = newId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating booking");
+                return Json(new { success = false, error = "Create failed" });
+            }
         }
 
-        private async Task LoadSupportInfosAsync(int? selectedId = null)
+        [HttpPut]
+        public async Task<IActionResult> Edit([FromBody] BookingHienNpq model)
         {
-            var infos = await _context.SupportInfoHienNpqs
-                .AsNoTracking()
-                .OrderBy(s => s.LicensePlate)
-                .ToListAsync();
-
-            ViewBag.SupportInfos = new SelectList(infos, "SupportInfoHienNpqid", "LicensePlate", selectedId);
+            if (!EnsureToken()) return Unauthorized();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            try
+            {
+                var resp = await _apiClient.PutAsJsonAsync("BookingHienNpqs", model);
+                if (!resp.IsSuccessStatusCode)
+                    return Json(new { success = false, error = "API update failed" });
+                var result = await resp.Content.ReadFromJsonAsync<int>();
+                return Json(new { success = true, affected = result });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating booking {Id}", model.BookingHienNpqid);
+                return Json(new { success = false, error = "Update failed" });
+            }
         }
     }
 }

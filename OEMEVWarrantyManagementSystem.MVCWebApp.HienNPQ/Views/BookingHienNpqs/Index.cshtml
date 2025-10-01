@@ -5,12 +5,12 @@
 }
 
 <h2>Bookings</h2>
-
-<p>
-    <a asp-action="Create" class="btn btn-sm btn-success">Create New</a>
-</p>
-
-<table class="table table-striped table-sm">
+<div class="mb-2 d-flex gap-2">
+    <button id="reloadBtn" class="btn btn-sm btn-primary">Reload</button>
+    <button id="createBtn" class="btn btn-sm btn-success">Create</button>
+    <span id="statusMsg" class="ms-2 text-muted">Loading...</span>
+</div>
+<table class="table table-striped table-sm" id="bookingsTable">
     <thead>
     <tr>
         <th>ID</th>
@@ -25,25 +25,223 @@
         <th></th>
     </tr>
     </thead>
-    <tbody>
-    @foreach (var b in Model)
-    {
-        <tr>
-            <td>@b.BookingHienNpqid</td>
-            <td>@b.StationName</td>
-            <td>@b.VehicleType</td>
-            <td>@b.BatteryCapacity</td>
-            <td>@b.StartTime</td>
-            <td>@b.EndTime</td>
-            <td>@b.PricePerHour</td>
-            <td>@b.Status</td>
-            <td>@b.SupportInfoHienNpq?.LicensePlate</td>
-            <td>
-                <a asp-action="Details" asp-route-id="@b.BookingHienNpqid">Details</a> |
-                <a asp-action="Edit" asp-route-id="@b.BookingHienNpqid">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@b.BookingHienNpqid">Delete</a>
-            </td>
-        </tr>
-    }
-    </tbody>
+    <tbody></tbody>
 </table>
+
+<!-- Detail / Edit Modal -->
+<div class="modal" tabindex="-1" id="bookingModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Detail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="bookingForm">
+            <input type="hidden" id="BookingHienNpqid" />
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label">Station Name</label>
+                    <input class="form-control" id="StationName" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Vehicle Type</label>
+                    <input class="form-control" id="VehicleType" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Battery Capacity</label>
+                    <input type="number" class="form-control" id="BatteryCapacity" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Price / Hour</label>
+                    <input type="number" step="0.01" class="form-control" id="PricePerHour" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Start Time (UTC)</label>
+                    <input type="datetime-local" class="form-control" id="StartTime" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Time (UTC)</label>
+                    <input type="datetime-local" class="form-control" id="EndTime" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <input class="form-control" id="Status" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">License Plate</label>
+                    <input class="form-control" id="LicensePlate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">SupportInfoHienNpqid</label>
+                    <input type="number" class="form-control" id="SupportInfoHienNpqid" />
+                </div>
+            </div>
+        </form>
+        <div id="detailOnly" class="d-none">
+            <!-- Extra detail area if needed -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="saveBtn" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+    const tableBody = document.querySelector('#bookingsTable tbody');
+    const status = document.getElementById('statusMsg');
+    let modal, saveBtn, createMode = false;
+
+    function ensureModal() {
+        if (!modal) {
+            modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            saveBtn = document.getElementById('saveBtn');
+            saveBtn.addEventListener('click', onSave);
+        }
+    }
+
+    function norm(b) {
+        // Normalize both PascalCase and camelCase responses
+        return {
+            BookingHienNpqid: b.BookingHienNpqid ?? b.bookingHienNpqid ?? 0,
+            AccountId: b.AccountId ?? b.accountId ?? 0,
+            StationName: b.StationName ?? b.stationName ?? '',
+            VehicleType: b.VehicleType ?? b.vehicleType ?? '',
+            BatteryCapacity: b.BatteryCapacity ?? b.batteryCapacity ?? 0,
+            PricePerHour: b.PricePerHour ?? b.pricePerHour ?? 0,
+            StartTime: b.StartTime ?? b.startTime ?? null,
+            EndTime: b.EndTime ?? b.endTime ?? null,
+            IsPreBooked: b.IsPreBooked ?? b.isPreBooked ?? false,
+            Status: b.Status ?? b.status ?? '',
+            SupportInfoHienNpqid: b.SupportInfoHienNpqid ?? b.supportInfoHienNpqid ?? null,
+            SupportInfoHienNpq: b.SupportInfoHienNpq ?? b.supportInfoHienNpq ?? null
+        };
+    }
+
+    async function loadBookings() {
+        status.textContent = 'Loading...';
+        tableBody.innerHTML = '';
+        try {
+            const resp = await fetch('@Url.Action("Data","BookingHienNpqs")');
+            if (!resp.ok) { status.textContent = 'Error ' + resp.status; return; }
+            const json = await resp.json();
+            if (!json.success) { status.textContent = json.error || 'Failed'; return; }
+            const items = (json.data || []).map(norm);
+            tableBody.innerHTML = items.map(b => rowHtml(b)).join('') || '<tr><td colspan="10" class="text-center">No data</td></tr>';
+            status.textContent = 'Loaded';
+        } catch(e) { console.error(e); status.textContent = 'Error'; }
+    }
+
+    function rowHtml(b) {
+        return `<tr data-id="${b.BookingHienNpqid}">
+            <td>${b.BookingHienNpqid}</td>
+            <td>${escapeHtml(b.StationName)}</td>
+            <td>${escapeHtml(b.VehicleType)}</td>
+            <td>${b.BatteryCapacity}</td>
+            <td>${formatDate(b.StartTime)}</td>
+            <td>${formatDate(b.EndTime)}</td>
+            <td>${b.PricePerHour}</td>
+            <td>${escapeHtml(b.Status)}</td>
+            <td>${b.SupportInfoHienNpq ? escapeHtml(b.SupportInfoHienNpq.LicensePlate ?? b.SupportInfoHienNpq.licensePlate) : ''}</td>
+            <td><button class="btn btn-sm btn-outline-info me-1" data-action="detail">Detail</button><button class="btn btn-sm btn-outline-primary" data-action="edit">Edit</button></td>
+        </tr>`;
+    }
+
+    function formatDate(d) { if(!d) return ''; const dt = new Date(d); return dt.toISOString().slice(0,16).replace('T',' '); }
+    function escapeHtml(str){ if(str==null) return ''; return str.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+    tableBody.addEventListener('click', async e => {
+        const btn = e.target.closest('button[data-action]');
+        if(!btn) return;
+        const tr = btn.closest('tr');
+        const id = tr.getAttribute('data-id');
+        if(btn.dataset.action === 'detail') await openDetail(id, false);
+        if(btn.dataset.action === 'edit') await openDetail(id, true);
+    });
+
+    document.getElementById('reloadBtn').addEventListener('click', loadBookings);
+    document.getElementById('createBtn').addEventListener('click', () => openCreate());
+
+    async function openDetail(id, editing){
+        ensureModal();
+        createMode = false;
+        document.getElementById('modalTitle').textContent = editing ? 'Edit Booking' : 'Booking Detail';
+        const resp = await fetch('@Url.Action("Get","BookingHienNpqs")' + '?id=' + id);
+        if(!resp.ok){ alert('Failed to load booking'); return; }
+        const json = await resp.json();
+        if(!json.success){ alert(json.error || 'Error'); return; }
+        fillForm(norm(json.data));
+        setEditable(editing);
+        saveBtn.classList.toggle('d-none', !editing);
+        modal.show();
+    }
+
+    function openCreate(){
+        ensureModal();
+        createMode = true;
+        document.getElementById('modalTitle').textContent = 'Create Booking';
+        clearForm();
+        setEditable(true);
+        saveBtn.classList.remove('d-none');
+        modal.show();
+    }
+
+    function fillForm(b){
+        document.getElementById('BookingHienNpqid').value = b.BookingHienNpqid || '';
+        document.getElementById('StationName').value = b.StationName || '';
+        document.getElementById('VehicleType').value = b.VehicleType || '';
+        document.getElementById('BatteryCapacity').value = b.BatteryCapacity ?? '';
+        document.getElementById('PricePerHour').value = b.PricePerHour ?? '';
+        document.getElementById('StartTime').value = b.StartTime ? new Date(b.StartTime).toISOString().slice(0,16) : '';
+        document.getElementById('EndTime').value = b.EndTime ? new Date(b.EndTime).toISOString().slice(0,16) : '';
+        document.getElementById('Status').value = b.Status || '';
+        document.getElementById('SupportInfoHienNpqid').value = b.SupportInfoHienNpqid ?? '';
+        document.getElementById('LicensePlate').value = b.SupportInfoHienNpq ? (b.SupportInfoHienNpq.LicensePlate || b.SupportInfoHienNpq.licensePlate || '') : '';
+    }
+    function clearForm(){ fillForm({}); }
+    function setEditable(flag){
+        ['StationName','VehicleType','BatteryCapacity','PricePerHour','StartTime','EndTime','Status','SupportInfoHienNpqid','LicensePlate']
+            .forEach(id=>document.getElementById(id).disabled = !flag);
+    }
+
+    async function onSave(){
+        const body = collectModel();
+        if(createMode){
+            const resp = await fetch('@Url.Action("Create","BookingHienNpqs")', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+            const json = await resp.json();
+            if(!json.success){ alert(json.error||'Create failed'); return; }
+        } else {
+            const resp = await fetch('@Url.Action("Edit","BookingHienNpqs")', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+            const json = await resp.json();
+            if(!json.success){ alert(json.error||'Update failed'); return; }
+        }
+        modal.hide();
+        loadBookings();
+    }
+
+    function collectModel(){
+        return {
+            BookingHienNpqid: Number(document.getElementById('BookingHienNpqid').value) || 0,
+            AccountId: 0,
+            StationName: document.getElementById('StationName').value.trim(),
+            VehicleType: document.getElementById('VehicleType').value.trim(),
+            BatteryCapacity: Number(document.getElementById('BatteryCapacity').value) || 0,
+            PricePerHour: Number(document.getElementById('PricePerHour').value) || 0,
+            StartTime: new Date(document.getElementById('StartTime').value).toISOString(),
+            EndTime: document.getElementById('EndTime').value ? new Date(document.getElementById('EndTime').value).toISOString() : null,
+            IsPreBooked: false,
+            Status: document.getElementById('Status').value.trim(),
+            SupportInfoHienNpqid: document.getElementById('SupportInfoHienNpqid').value ? Number(document.getElementById('SupportInfoHienNpqid').value) : null
+        };
+    }
+
+    document.getElementById('reloadBtn').addEventListener('click', loadBookings);
+    document.getElementById('createBtn').addEventListener('click', () => openCreate());
+
+    loadBookings();
+</script>
+}
