@@ -2,11 +2,13 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
 
 public partial class BookingHienNpq
 {
+    [Key]
     public int BookingHienNpqid { get; set; }
 
     public int AccountId { get; set; }

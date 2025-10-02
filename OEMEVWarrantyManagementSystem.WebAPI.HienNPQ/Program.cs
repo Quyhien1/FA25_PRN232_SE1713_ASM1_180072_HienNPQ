@@ -7,6 +7,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.DBContext;
 using Microsoft.EntityFrameworkCore;
+using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
+using Microsoft.OData.Edm;
+using Microsoft.OData.ModelBuilder;
+using Microsoft.AspNetCore.OData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +72,19 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
+static IEdmModel GetEdmModel()
+{
+    var odataBuilder = new ODataConventionModelBuilder();
+    odataBuilder.EntitySet<BookingHienNpq>("BookingHienNpq"); // ENTITY
+    odataBuilder.EntitySet<SupportInfoHienNpq>("SupportInfoHienNpq"); // ENTITY
+    return odataBuilder.GetEdmModel();
+}
+builder.Services.AddControllers().AddOData(options =>
+{
+    options.Select().Filter().OrderBy().Expand().SetMaxTop(null).Count();
+    options.AddRouteComponents("odata", GetEdmModel());
+});
+
 builder.Services.AddDbContext<FA25_PRN232_SE1713_G5_OEMEVWarrantyManagementSystemContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 var app = builder.Build();

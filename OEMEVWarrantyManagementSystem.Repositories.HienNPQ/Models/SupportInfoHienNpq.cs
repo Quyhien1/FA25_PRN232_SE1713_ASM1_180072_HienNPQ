@@ -2,11 +2,14 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
 
 public partial class SupportInfoHienNpq
 {
+    [Key]
     public int SupportInfoHienNpqid { get; set; }
 
     public string LicensePlate { get; set; }
@@ -15,5 +18,9 @@ public partial class SupportInfoHienNpq
 
     public string Notes { get; set; }
 
+    // The navigation property causes cycles when serializing Booking -> SupportInfo -> Bookings.
+    // It previously appeared in JSON as an array with a single null element due to IgnoreCycles.
+    // Ignore it during JSON serialization to return clean objects without [ null ].
+    [JsonIgnore]
     public virtual ICollection<BookingHienNpq> BookingHienNpqs { get; set; } = new List<BookingHienNpq>();
 }

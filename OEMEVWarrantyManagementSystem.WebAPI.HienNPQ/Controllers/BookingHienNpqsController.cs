@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.ModelExtensions;
 using OEMEVWarrantyManagementSystem.Repositories.HienNPQ.Models;
 using OEMEVWarrantyManagementSystem.Service.HienNPQ;
@@ -21,6 +22,7 @@ namespace OEMEVWarrantyManagementSystem.WebAPI.HienNPQ.Controllers
         // GET: api/<BookingHienNpqsController>
         [Authorize(Roles ="1,2")]
         [HttpGet]
+        [EnableQuery]
         public async Task<IEnumerable<BookingHienNpq>> Get()
         {
             return await _bookingHienNpqService.GetAllAsync();
